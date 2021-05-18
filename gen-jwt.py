@@ -2,22 +2,45 @@
 
 import hvac
 import os
+import shutil
 from jwcrypto import jwk, jwt
 from datetime import datetime
 
-# Need VAULT_ADDR and VAULT_TOKEN environment variables set
-client = hvac.Client()
+if os.path.isfile('./priv.pem'):
+    shutil.copyfile('priv.pem', 'tmp.pem')
+else:
+    env_var = 'KEY_VER'
 
-export_key_response = client.secrets.transit.export_key(
-    name='jwt',
-    key_type='signing-key',
-)
+    # Need VAULT_ADDR and VAULT_TOKEN environment variables set
+    client = hvac.Client()
 
-privKeyPEM = export_key_response['data']['keys']['1']
-# print('Exported key: %s' % privKeyPEM)
+    read_key_response = client.secrets.transit.read_key(name='jwt')
 
-with open("tmp.pem", "w") as tmpfile:
-    tmpfile.write(privKeyPEM)
+    if env_var in os.environ:
+        keyVer = os.environ[env_var]
+    else:
+        keyVer = read_key_response['data']['latest_version']
+
+    print("Key Version: %s" % keyVer)
+
+    try:
+        export_key_response = client.secrets.transit.export_key(
+            name='jwt',
+            key_type='signing-key',
+            version=keyVer,
+        )
+    except hvac.exceptions.InvalidRequest:
+        print('Key Version not allowed')
+        exit(1)
+
+    for k, v in export_key_response['data']['keys'].items():
+        if k == keyVer:
+            privKeyPEM = v
+
+    # print('Exported key: %s' % privKeyPEM)
+
+    with open("tmp.pem", "w") as tmpfile:
+        tmpfile.write(privKeyPEM)
 
 with open("tmp.pem", "rb") as pemfile:
     privKey = jwk.JWK.from_pem(pemfile.read())
