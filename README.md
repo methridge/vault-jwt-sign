@@ -34,6 +34,8 @@ generating a JWT.
    pip install jwcrypto hvac
    ```
 
+### Using Vault to read signing key
+
 1. Generate token with `gen-jwt.py`
 
    ```shell
@@ -56,3 +58,52 @@ generating a JWT.
    $ ./check-jwt.py
    {"info":"Token signed at: 18/05/2021 15:36:22"}
    ```
+
+### Providing signing Key
+
+1. Create a `priv.pem` file with your private key in PEM format.
+
+1. Generate token with `gen-jwt.py`
+
+   ```shell
+   ./gen-jwt.py
+   ```
+
+   This will output the JWT and write it to the file `token.jwt`
+
+1. Verify token with `check-jwt.py`
+
+   ```shell
+   ./check-jwt.py
+   ```
+
+   Since the provided private key doesn't come from Vault, the JWT verification
+   will fail.
+
+   ```shell
+   # Example
+   $ ./check-jwt.py
+   Not signed by key version: 1
+   Not signed by key version: 2
+   Not signed by key version: 3
+   Not signed by key version: 4
+   Not signed by key version: 5
+   Token not signed by any key
+   ```
+
+### Rotating the signing key
+
+The private key for signing can be rotated with the `rotate-key.py` script.
+
+```shell
+$ ./rotate-key.py
+```
+
+### Specifying Key version
+
+By default the script uses the latest version of the signing key. This can be
+adjusted by setting the `KEY_VER` environment variable.
+
+```shell
+export KEY_VER=5
+```

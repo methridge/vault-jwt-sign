@@ -34,13 +34,9 @@ else:
         exit(1)
 
     for k, v in export_key_response['data']['keys'].items():
-        if k == keyVer:
-            privKeyPEM = v
-
-    # print('Exported key: %s' % privKeyPEM)
-
-    with open("tmp.pem", "w") as tmpfile:
-        tmpfile.write(privKeyPEM)
+        print('Exported key: %s' % v)
+        with open("tmp.pem", "w") as tmpfile:
+            tmpfile.write(v)
 
 with open("tmp.pem", "rb") as pemfile:
     privKey = jwk.JWK.from_pem(pemfile.read())
