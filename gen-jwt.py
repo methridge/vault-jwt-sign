@@ -34,7 +34,7 @@ else:
         exit(1)
 
     for k, v in export_key_response['data']['keys'].items():
-        print('Exported key: %s' % v)
+        # print('Exported key: %s' % v)
         with open("tmp.pem", "w") as tmpfile:
             tmpfile.write(v)
 
